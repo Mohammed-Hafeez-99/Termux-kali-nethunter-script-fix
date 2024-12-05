@@ -160,8 +160,9 @@ if [[ ${SYS_ARCH} == "arm64" ]]; then
         ROOTFS_URL="https://kali.download/nethunter-images/current/rootfs/kali-nethunter-rootfs-full-arm64.tar.xz"
         SHA_URL="https://kali.download/nethunter-images/current/rootfs/kali-nethunter-rootfs-full-arm64.tar.xz.sha512sum"
     elif [[ ${SYS_ARCH} == "armhf" ]]; then
-        # You can add similar logic for armhf here if needed
-        echo "ARMhf support not implemented."
+         echo "ARMhf support implemented."
+       	 ROOTFS_URL="https://kali.download/nethunter-images/current/rootfs/kali-nethunter-rootfs-full-armhf.tar.xz"
+         SHA_URL="https://kali.download/nethunter-images/current/rootfs/kali-nethunter-rootfs-full-armhf.tar.xz.sha512sum"
         exit 1
     else
         unsupported_arch
