@@ -1,7 +1,6 @@
-git merge origin/main
 #!/data/data/com.termux/files/usr/bin/bash -e
 
-VERSION=2024022001
+VERSION=2024091801
 BASE_URL=https://kali.download/nethunter-images/current/rootfs
 USERNAME=kali
 
@@ -103,10 +102,9 @@ function set_strings() {
     fi
     ####
 
-
-    CHROOT=kali-${SYS_ARCH}
-    IMAGE_NAME=kali-nethunter-rootfs-${wimg}-${SYS_ARCH}.tar.xz
-    SHA_NAME=kali-nethunter-rootfs-${wimg}-${SYS_ARCH}.tar.xz.sha512sum
+CHROOT=kali-${SYS_ARCH}
+IMAGE_NAME=kali-nethunter-rootfs-${wimg}-${SYS_ARCH}.tar.xz
+SHA_NAME=kali-nethunter-rootfs-${wimg}-${SYS_ARCH}.tar.xz.sha512sum
 }    
 
 function prepare_fs() {
@@ -121,14 +119,14 @@ function prepare_fs() {
 } 
 
 function cleanup() {
-    if [ -f ${IMAGE_NAME} ]; then
+    if [ -f "${IMAGE_NAME}" ]; then
         if ask "Delete downloaded rootfs file?" "N"; then
-	    if [ -f ${IMAGE_NAME} ]; then
-                rm -f ${IMAGE_NAME}
-	    fi
-	    if [ -f ${SHA_NAME} ]; then
-                rm -f ${SHA_NAME}
-	    fi
+        if [ -f "${IMAGE_NAME}" ]; then
+                rm -f "${IMAGE_NAME}"
+        fi
+        if [ -f "${SHA_NAME}" ]; then
+                rm -f "${SHA_NAME}"
+        fi
         fi
     fi
 } 
@@ -140,13 +138,13 @@ function check_dependencies() {
     apt-get update -y &> /dev/null || apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" dist-upgrade -y &> /dev/null
 
     for i in proot tar axel; do
-        if [ -e $PREFIX/bin/$i ]; then
+        if [ -e "$PREFIX"/bin/$i ]; then
             echo "  $i is OK"
         else
             printf "Installing ${i}...\n"
             apt install -y $i || {
                 printf "${red}ERROR: Failed to install packages.\n Exiting.\n${reset}"
-	        exit
+            exit
             }
         fi
     done
@@ -156,13 +154,14 @@ function check_dependencies() {
 
 function get_url() {
     ROOTFS_URL="${BASE_URL}/${IMAGE_NAME}"
-    SHA_URL="${BASE_URL}/${SHA_NAME}"}
-    
+    SHA_URL="${BASE_URL}/${SHA_NAME}"
+}
+
 function get_rootfs() {
     unset KEEP_IMAGE
-    if [ -f ${IMAGE_NAME} ]; then
+    if [ -f "${IMAGE_NAME}" ]; then
         if ask "Existing image file found. Delete and download a new one?" "N"; then
-            rm -f ${IMAGE_NAME}
+            rm -f "${IMAGE_NAME}"
         else
             printf "${yellow}[!] Using existing rootfs archive${reset}\n"
             KEEP_IMAGE=1
@@ -171,24 +170,24 @@ function get_rootfs() {
     fi
     printf "${blue}[*] Downloading rootfs...${reset}\n\n"
     get_url
-    wget ${EXTRA_ARGS} --continue "${ROOTFS_URL}"
+    wget "${EXTRA_ARGS}" --continue "${ROOTFS_URL}"
 }
 
 function get_sha() {
     if [ -z $KEEP_IMAGE ]; then
         printf "\n${blue}[*] Getting SHA ... ${reset}\n\n"
         get_url
-        if [ -f ${SHA_NAME} ]; then
-            rm -f ${SHA_NAME}
+        if [ -f "${SHA_NAME}" ]; then
+            rm -f "${SHA_NAME}"
         fi
-        wget ${EXTRA_ARGS} --continue "${SHA_URL}"
+        wget "${EXTRA_ARGS}" --continue "${SHA_URL}"
     fi
 }
 
 function verify_sha() {
     if [ -z $KEEP_IMAGE ]; then
         printf "\n${blue}[*] Verifying integrity of rootfs...${reset}\n\n"
-        sha512sum -c $SHA_NAME || {
+        sha512sum -c "$SHA_NAME" || {
             printf "${red} Rootfs corrupted. Please run this installer again or download the file manually\n${reset}"
             exit 1
         }
@@ -198,8 +197,7 @@ function verify_sha() {
 function extract_rootfs() {
     if [ -z $KEEP_CHROOT ]; then
         printf "\n${blue}[*] Extracting rootfs... ${reset}\n\n"
-        proot --link2symlink tar -xf $IMAGE_NAME 2> /dev/null || :
-        tar -xvf kali-nethunter-rootfs-full-arm64.tar.xz
+        proot --link2symlink tar -xf "$IMAGE_NAME" 2> /dev/null || :
     else        
         printf "${yellow}[!] Using existing rootfs directory${reset}\n"
     fi
@@ -209,7 +207,7 @@ function extract_rootfs() {
 function create_launcher() {
     NH_LAUNCHER=${PREFIX}/bin/nethunter
     NH_SHORTCUT=${PREFIX}/bin/nh
-    cat > $NH_LAUNCHER <<- EOF
+    cat > "$NH_LAUNCHER" <<- EOF
 #!/data/data/com.termux/files/usr/bin/bash -e
 cd \${HOME}
 ## termux-exec sets LD_PRELOAD so let's unset it before continuing
@@ -246,6 +244,7 @@ cmdline="proot \\
         -r $CHROOT \\
         -b /dev \\
         -b /proc \\
+        -b /sdcard \\
         -b $CHROOT\$home:/dev/shm \\
         -w \$home \\
            /usr/bin/env -i \\
@@ -263,12 +262,12 @@ else
 fi
 EOF
 
-    chmod 700 $NH_LAUNCHER
-    if [ -L ${NH_SHORTCUT} ]; then
-        rm -f ${NH_SHORTCUT}
+    chmod 700 "$NH_LAUNCHER"
+    if [ -L "${NH_SHORTCUT}" ]; then
+        rm -f "${NH_SHORTCUT}"
     fi
-    if [ ! -f ${NH_SHORTCUT} ]; then
-        ln -s ${NH_LAUNCHER} ${NH_SHORTCUT} >/dev/null
+    if [ ! -f "${NH_SHORTCUT}" ]; then
+        ln -s "${NH_LAUNCHER}" "${NH_SHORTCUT}" >/dev/null
     fi
    
 }
@@ -366,7 +365,7 @@ function fix_sudo() {
     ## fix sudo & su on start
     chmod +s $CHROOT/usr/bin/sudo
     chmod +s $CHROOT/usr/bin/su
-	echo "kali    ALL=(ALL:ALL) ALL" > $CHROOT/etc/sudoers.d/kali
+    echo "kali    ALL=(ALL:ALL) ALL" > $CHROOT/etc/sudoers.d/kali
 
     # https://bugzilla.redhat.com/show_bug.cgi?id=1773148
     echo "Set disable_coredump false" > $CHROOT/etc/sudo.conf
@@ -376,8 +375,8 @@ function fix_uid() {
     ## Change kali uid and gid to match that of the termux user
     USRID=$(id -u)
     GRPID=$(id -g)
-    nh -r usermod -u $USRID kali 2>/dev/null
-    nh -r groupmod -g $GRPID kali 2>/dev/null
+    nh -r usermod -u "$USRID" kali 2>/dev/null
+    nh -r groupmod -g "$GRPID" kali 2>/dev/null
 }
 
 function print_banner() {
@@ -416,7 +415,7 @@ if [[ ! -z $1 ]]; then
     fi
 fi
 
-cd $HOME
+cd "$HOME"
 print_banner
 get_arch
 set_strings
