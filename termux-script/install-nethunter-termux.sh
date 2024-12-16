@@ -1,3 +1,4 @@
+git merge origin/main
 #!/data/data/com.termux/files/usr/bin/bash -e
 
 VERSION=2024022001
@@ -104,8 +105,8 @@ function set_strings() {
 
 
     CHROOT=kali-${SYS_ARCH}
-    IMAGE_NAME=kalifs-${SYS_ARCH}-${wimg}.tar.xz
-    SHA_NAME=kalifs-${SYS_ARCH}-${wimg}.sha512sum
+    IMAGE_NAME=kali-nethunter-rootfs-${wimg}-${SYS_ARCH}.tar.xz
+    SHA_NAME=kali-nethunter-rootfs-${wimg}-${SYS_ARCH}.tar.xz.sha512sum
 }    
 
 function prepare_fs() {
@@ -155,20 +156,8 @@ function check_dependencies() {
 
 function get_url() {
     ROOTFS_URL="${BASE_URL}/${IMAGE_NAME}"
-    SHA_URL="${BASE_URL}/${SHA_NAME}"
-if [[ ${SYS_ARCH} == "arm64" ]]; then
-        ROOTFS_URL="https://kali.download/nethunter-images/current/rootfs/kali-nethunter-rootfs-full-arm64.tar.xz"
-        SHA_URL="https://kali.download/nethunter-images/current/rootfs/kali-nethunter-rootfs-full-arm64.tar.xz.sha512sum"
-    elif [[ ${SYS_ARCH} == "armhf" ]]; then
-         echo "ARMhf support implemented."
-       	 ROOTFS_URL="https://kali.download/nethunter-images/current/rootfs/kali-nethunter-rootfs-full-armhf.tar.xz"
-         SHA_URL="https://kali.download/nethunter-images/current/rootfs/kali-nethunter-rootfs-full-armhf.tar.xz.sha512sum"
-        exit 1
-    else
-        unsupported_arch
-    fi
-}
-
+    SHA_URL="${BASE_URL}/${SHA_NAME}"}
+    
 function get_rootfs() {
     unset KEEP_IMAGE
     if [ -f ${IMAGE_NAME} ]; then
@@ -199,7 +188,6 @@ function get_sha() {
 function verify_sha() {
     if [ -z $KEEP_IMAGE ]; then
         printf "\n${blue}[*] Verifying integrity of rootfs...${reset}\n\n"
-        SHA_NAME="kali-nethunter-rootfs-full-arm64.tar.xz.sha512sum"
         sha512sum -c $SHA_NAME || {
             printf "${red} Rootfs corrupted. Please run this installer again or download the file manually\n${reset}"
             exit 1
